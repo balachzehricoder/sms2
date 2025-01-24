@@ -1,0 +1,44 @@
+
+.bg-brand{
+    background-color: #F3F3F9;
+} 
+.add_btn .btn-icon-left{
+    padding: 7px 8px 6px;
+}
+.add_btn:hover .btn-icon-left{
+   background-color: black;
+}
+.add_btn:active .btn-icon-left{
+    background-color: black;
+ }
+ .add_btn:focus .btn-icon-left{
+    background-color: black;
+ }
+ #DataTables_Table_0_wrapper{
+    padding: 0 !important;
+ }
+ #step-form-horizontal .content {
+    min-height: 23rem !important;
+ }
+ .form-control {
+    height: 32px;
+    min-height: 32px;
+    font-size: 12px;
+}
+
+.confirm-password{
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 20px;
+}
+.confirm-password .form-group{
+    margin-bottom: 0;
+}
+.confirm-password .form-group input{
+    width: 60px;
+    height: 60px;
+    border: 1px solid #ced4da !important;
+    padding: 10px !important;
+    text-align: center;
+}
