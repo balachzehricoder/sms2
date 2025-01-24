@@ -38,7 +38,9 @@ $studentQuery = "SELECT
                     date_of_admission,
                     status,
                     session_name,
-                    religion
+                    religion,
+                    student_image,
+                    monthly_fee
                 FROM students 
                 JOIN sessions ON students.session = sessions.id
                 WHERE status = 'active' AND class_id = ?";
@@ -54,7 +56,11 @@ $studentsResult = $stmt->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print Class Details</title>
-    <link rel="stylesheet" href="path/to/your/bootstrap.css">
+    <link href="./plugins/tables/css/datatable/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+        <!-- Custom Stylesheet -->
+        <link href="css/style.css" rel="stylesheet">
+    <link href="./css/custome.css" rel="stylesheet">
     <style>
        body {
             font-family: Arial, sans-serif;
@@ -120,6 +126,14 @@ $studentsResult = $stmt->get_result();
                 margin: 0;
             }
         }
+
+        /* Style for images */
+        .student-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +153,7 @@ $studentsResult = $stmt->get_result();
                     <th>Date of Admission</th>
                     <th>Session</th>
                     <th>Religion</th>
+                    <th>Monthly Fee</th>
                 </tr>
             </thead>
             <tbody>
@@ -158,10 +173,11 @@ $studentsResult = $stmt->get_result();
                                 <td>" . htmlspecialchars($student['date_of_admission']) . "</td>
                                 <td>" . htmlspecialchars($student['session_name']) . "</td>
                                 <td>" . htmlspecialchars($student['religion']) . "</td>
+                                <td>" . htmlspecialchars($student['monthly_fee']) . "</td>
                               </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='11'>No students found in this class.</td></tr>";
+                    echo "<tr><td colspan='13'>No students found in this class.</td></tr>";
                 }
                 ?>
             </tbody>

@@ -41,11 +41,10 @@ $studentQuery = "SELECT
                     dob,
                     date_of_admission,
                     status,
-                    session_name,
+                    session,
                     religion,
-                    student_image,
                     monthly_fee
-                FROM students JOIN sessions ON students.session = sessions.id
+                FROM students
                 WHERE status = 'active' AND class_id = ?";
 $stmt = $conn->prepare($studentQuery);
 $stmt->bind_param('i', $class_id);
@@ -59,7 +58,7 @@ $studentsResult = $stmt->get_result();
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="javascript:void(0)">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="javascript:void(0)">Classes</a></li>
-                <li class="breadcrumb-item active"><a href="javascript:void(0)">View Class</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Update Student Info</a></li>
             </ol>
         </div>
     </div>
@@ -69,14 +68,14 @@ $studentsResult = $stmt->get_result();
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">Class Details: <?php echo htmlspecialchars($classDetails['class_name']); ?></h4>
-                        <form action="student_fee_update.php" method="POST">
+                        <h4 class="card-title">Update Class Details: <?php echo htmlspecialchars($classDetails['class_name']); ?></h4>
+                        <form action="update_students_action.php" method="POST">
+                            <input type="hidden" name="class_id" value="<?php echo $class_id; ?>">
                             <div class="table-responsive">
                                 <table class="table table-striped table-bordered">
                                     <thead>
                                         <tr>
                                             <th>S.No</th>
-                                            <th>Student Image</th>
                                             <th>Student ID</th>
                                             <th>Family Code</th>
                                             <th>Name</th>
@@ -97,30 +96,34 @@ $studentsResult = $stmt->get_result();
                                             while ($student = $studentsResult->fetch_assoc()) {
                                                 echo "<tr>
                                                         <td>" . $sno++ . "</td>
-                                                        <td><img src='" . htmlspecialchars($student['student_image']) . "' alt='Image' width='50'></td>
-                                                        <td>" . htmlspecialchars($student['student_id']) . "</td>
-                                                        <td>" . htmlspecialchars($student['family_code']) . "</td>
-                                                        <td>" . htmlspecialchars($student['student_name']) . "</td>
-                                                        <td>" . htmlspecialchars($student['gender']) . "</td>
-                                                        <td>" . htmlspecialchars($student['father_name']) . "</td>
-                                                        <td>" . htmlspecialchars($student['father_cell_no']) . "</td>
-                                                        <td>" . htmlspecialchars($student['dob']) . "</td>
-                                                        <td>" . htmlspecialchars($student['date_of_admission']) . "</td>
-                                                        <td>" . htmlspecialchars($student['session_name']) . "</td>
-                                                        <td>" . htmlspecialchars($student['religion']) . "</td>
+                                                        <td><input type='text' name='student_id[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['student_id']) . "' class='form-control' readonly></td>
+                                                        <td><input type='text' name='family_code[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['family_code']) . "' class='form-control'></td>
+                                                        <td><input type='text' name='student_name[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['student_name']) . "' class='form-control'></td>
+                                                        <td>
+                                                            <select name='gender[" . $student['student_id'] . "]' class='form-control'>
+                                                                <option value='Male'" . ($student['gender'] == 'Male' ? ' selected' : '') . ">Male</option>
+                                                                <option value='Female'" . ($student['gender'] == 'Female' ? ' selected' : '') . ">Female</option>
+                                                            </select>
+                                                        </td>
+                                                        <td><input type='text' name='father_name[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['father_name']) . "' class='form-control'></td>
+                                                        <td><input type='text' name='father_cell_no[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['father_cell_no']) . "' class='form-control'></td>
+                                                        <td><input type='date' name='dob[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['dob']) . "' class='form-control'></td>
+                                                        <td><input type='date' name='date_of_admission[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['date_of_admission']) . "' class='form-control'></td>
+                                                        <td><input type='number' name='session[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['session']) . "' class='form-control'></td>
+                                                        <td><input type='text' name='religion[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['religion']) . "' class='form-control'></td>
                                                         <td><input type='number' name='monthly_fee[" . $student['student_id'] . "]' value='" . htmlspecialchars($student['monthly_fee']) . "' class='form-control'></td>
                                                       </tr>";
                                             }
                                         } else {
-                                            echo "<tr><td colspan='13'>No students found in this class.</td></tr>";
+                                            echo "<tr><td colspan='12'>No students found in this class.</td></tr>";
                                         }
                                         ?>
                                     </tbody>
                                 </table>
                             </div>
                             <button type="submit" class="btn btn-primary">Update</button>
+                            <a href="classwise.php" class="btn btn-secondary">Back</a>
                         </form>
-                        <a href="classwise" class="btn btn-secondary">Back</a>
                     </div>
                 </div>
             </div>
