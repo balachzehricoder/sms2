@@ -10,12 +10,22 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 // Database connection
 include 'confiq.php';
 
-// Fetch data from the database
-$studentQuery = "SELECT 
-    student_id, family_code, student_name, gender, class_id, section_id, 
-    date_of_admission, status 
-FROM students ORDER BY date_of_admission DESC";
+// Get selected fields and sorting preferences
+$fields = $_GET['fields'] ?? ['student_id', 'family_code', 'student_name']; // Default fields
+$sortBy = $_GET['sort_by'] ?? 'date_of_admission'; // Default sorting
 
+// Validate fields
+$validFields = ['student_id', 'family_code', 'student_name', 'gender', 'class_id', 'section_id', 'date_of_admission', 'status'];
+$selectedFields = array_intersect($fields, $validFields);
+
+// If no valid fields are selected, set a default
+if (empty($selectedFields)) {
+    $selectedFields = ['student_id', 'student_name'];
+}
+
+// Build the query dynamically
+$fieldList = implode(', ', $selectedFields);
+$studentQuery = "SELECT $fieldList FROM students ORDER BY $sortBy ASC";
 $studentResult = $conn->query($studentQuery);
 
 if (!$studentResult) {
@@ -26,14 +36,8 @@ if (!$studentResult) {
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
-// Set the header row
-$headers = [
-    'Student ID', 'Family Code', 'Student Name', 'Gender', 
-    'Class ID', 'Section ID', 'Date of Admission', 'Status'
-];
-
-// Add headers to the first row
-$sheet->fromArray($headers, null, 'A1');
+// Set the header row dynamically
+$sheet->fromArray($selectedFields, null, 'A1');
 
 // Apply styles to the header row
 $headerStyle = [
@@ -91,4 +95,3 @@ $writer->save('php://output');
 // Close the database connection
 $conn->close();
 exit;
-?>

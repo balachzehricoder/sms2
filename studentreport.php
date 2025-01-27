@@ -3,9 +3,6 @@ include 'header.php';
 include 'sidebar.php';
 ?>
 <style>
-	
-	
-
 	.button-row {
 		display: flex;
 		justify-content: space-between;
@@ -54,91 +51,84 @@ include 'sidebar.php';
 <body>
 
 	<div class="content-body">
-	<div class="row page-titles mx-0">
-		<div class="col p-md-0">
-			<ol class="breadcrumb">
-				<li class="breadcrumb-item"><a href="javascript:void(0)">Dashboard</a></li>
-				<li class="breadcrumb-item active"><a href="javascript:void(0)">Students</a></li>
-			</ol>
-		</div>
-	</div>
-
-	<div class="container-fluid">
-		<div class="button-row">
-			<button onclick="redirectToClasswise()">Classwise Students Reports</button>
-			<button onclick="redirectToAllStudents()">View All Students</button>
+		<div class="row page-titles mx-0">
+			<div class="col p-md-0">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item"><a href="javascript:void(0)">Dashboard</a></li>
+					<li class="breadcrumb-item active"><a href="javascript:void(0)">Students</a></li>
+				</ol>
+			</div>
 		</div>
 
-		<script>
-		function redirectToClasswise()
-		{
-			window.location.href = 'classwise';
-		}
-		function redirectToAllStudents()
-		{
-			window.location.href = 'all_students';
-		}
-		function redirectToStruckOff()
-		{
-			window.location.href = 'struck_off';
-		}
-		function redirectToGenderWise()
-		{
-			window.location.href = 'genderwise';
-		}
-		</script>
-		
-		
-		<div class="button-row">
-			<button>Admissions Stats</button>
-			<button>Locality Wise Reports</button>
-		</div>
-		<div class="button-row">
-			<button onclick="redirectToAdmissionWise()">Datewise Admissions Report</button>
-			<button onclick="redirectToGenderWise()">Gender Wise Report</button>
-		</div>
+		<div class="container-fluid">
+			<div class="button-row">
+				<button onclick="redirectToClasswise()">Classwise Students Reports</button>
+				<button onclick="redirectToAllStudents()">View All Students</button>
+			</div>
 
-		<script>
-			function redirectToAdmissionWise(){
-				window.location.href = 'datewise_admission'
-			}
-		</script>
-
-		<div class="button-row">
-		<button>Age Wise Students Report</button>
-					<button onclick="redirectToStruckOff()">Struck off/Old Students</button>
-		</div>
-		<div class="button-row">
-		<button onclick="redirectToClasswise1()">Religion Wise Report</button>
-		<button onclick="redirectToContacts()">Contacts Report</button>
-			
 			<script>
-			function redirectToClasswise1()
-			{
-				window.location.href = 'relisionwise';
-			}
-			function redirectToContacts()
-			{
-				window.location.href = 'contacts_report';
-			}
-			</script>			
+				function redirectToClasswise() {
+					window.location.href = 'classwise';
+				}
+
+				function redirectToAllStudents() {
+					window.location.href = 'all_students';
+				}
+
+				function redirectToStruckOff() {
+					window.location.href = 'struck_off';
+				}
+
+				function redirectToGenderWise() {
+					window.location.href = 'genderwise';
+				}
+			</script>
+
+
+			<div class="button-row">
+				<button>Admissions Stats</button>
+				<button>Locality Wise Reports</button>
+			</div>
+			<div class="button-row">
+				<button onclick="redirectToAdmissionWise()">Datewise Admissions Report</button>
+				<button onclick="redirectToGenderWise()">Gender Wise Report</button>
+			</div>
+
+			<script>
+				function redirectToAdmissionWise() {
+					window.location.href = 'datewise_admission'
+				}
+			</script>
+
+			<div class="button-row">
+				<button onclick="window.location.href='age_wise_report'">Age Wise Students Report</button>
+				<button onclick="redirectToStruckOff()">Struck off/Old Students</button>
+			</div>
+			<div class="button-row">
+				<button onclick="redirectToClasswise1()">Religion Wise Report</button>
+				<button onclick="redirectToContacts()">Contacts Report</button>
+
+				<script>
+					function redirectToClasswise1() {
+						window.location.href = 'relisionwise';
+					}
+
+					function redirectToContacts() {
+						window.location.href = 'contacts_report';
+					}
+				</script>
+			</div>
+			<div class="button-row">
+				<button onclick="window.location.href='generate_id_cards'">Generate ID Cards</button>
+
+
+
+			</div>
+
 		</div>
-		<div class="button-row">
-			
-			
-		
-		</div>
-		
 	</div>
-	</div>
-	
-	
-	
+
+
+
 	<?php include 'footer.php' ?>
 </body>
-
-
-
-
-
-

@@ -50,14 +50,30 @@ $studentResult = $conn->query($studentQuery);
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <div class="flex justify-content-around">
-							<h4 class="card-title">All Students</h4>
-							<a href="export_all_students.php" class="btn btn-success">Export to Excel</a>
+                        <div class="d-flex justify-content-between mb-3">
+                            <h4 class="card-title">All Students</h4>
+                            <div>
+                                <!-- Export Button -->
+                                <a href="export_form" class="btn btn-success">Export to Excel</a>
+                                <!-- Print Button -->
+                                <a href="print_form" class="btn btn-primary">Print</a>
 
-						</div>
-						
+                            </div>
+                        </div>
+
+                        <!-- Sort Options -->
+                        <div class="mb-3">
+                            <label for="sortBy" class="form-label">Sort By:</label>
+                            <select id="sortBy" class="form-control">
+                                <option value="date_of_admission">Date of Admission</option>
+                                <option value="class_section">Class & Section</option>
+                                <option value="family_code">Family Code</option>
+                            </select>
+                        </div>
+
+                        <!-- Students Table -->
                         <div class="table-responsive">
-                            <table class="table table-striped table-bordered">
+                            <table class="table table-striped table-bordered" id="studentsTable">
                                 <thead>
                                     <tr>
                                         <th>S.No</th>
@@ -114,4 +130,5 @@ $studentResult = $conn->query($studentQuery);
         </div>
     </div>
 </div>
+
 <?php include 'footer.php'; ?>

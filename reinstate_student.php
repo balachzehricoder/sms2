@@ -16,4 +16,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
 } else {
     echo "Invalid request.";
 }
-?>
