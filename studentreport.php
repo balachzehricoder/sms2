@@ -110,11 +110,16 @@ include 'sidebar.php';
 		</div>
 		<div class="button-row">
 		<button onclick="redirectToClasswise1()">Religion Wise Report</button>
+		<button onclick="redirectToContacts()">Contacts Report</button>
 			
 			<script>
 			function redirectToClasswise1()
 			{
 				window.location.href = 'relisionwise';
+			}
+			function redirectToContacts()
+			{
+				window.location.href = 'contacts_report';
 			}
 			</script>			
 		</div>
