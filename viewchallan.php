@@ -1,114 +1,173 @@
 <?php
 include 'confiq.php';  // Database connection
-include 'header.php';   // Optional: Add header
-include 'sidebar.php';  // Optional: Add sidebar
+include 'header.php';  // Optional
+include 'sidebar.php'; // Optional
 
-// Fetch classes and sections for filtering (optional)
-$classes_query = "SELECT class_id, class_name FROM classes ORDER BY class_name ASC";
-$classes_result = $conn->query($classes_query);
+// 1) Fetch classes into an array
+$classes = [];
+$resClasses = $conn->query("SELECT class_id, class_name FROM classes ORDER BY class_name ASC");
+while ($row = $resClasses->fetch_assoc()) {
+    $classes[] = $row;
+}
 
-$sections_query = "SELECT section_id, section_name FROM sections ORDER BY section_name ASC";
-$sections_result = $conn->query($sections_query);
+// 2) Fetch sections into an array
+$sections = [];
+$resSections = $conn->query("SELECT section_id, section_name FROM sections ORDER BY section_name ASC");
+while ($row = $resSections->fetch_assoc()) {
+    $sections[] = $row;
+}
 
-// Initialize variables for filtering
-$class_filter = isset($_GET['class_id']) ? $_GET['class_id'] : '';
+// 3) Grab any GET filters from the URL
+$class_filter   = isset($_GET['class_id']) ? $_GET['class_id'] : '';
 $section_filter = isset($_GET['section_id']) ? $_GET['section_id'] : '';
 
-// Build the WHERE clause for filtering (optional)
-$where_clause = "";
-if ($class_filter) {
-    $where_clause .= " AND students.class_id = '$class_filter'";
+// 4) Build a WHERE clause based on filters
+$where = "1";  // Always true, so we can append conditions
+if (!empty($class_filter)) {
+    $class_filter_esc = mysqli_real_escape_string($conn, $class_filter);
+    $where .= " AND s.class_id = '$class_filter_esc'";
 }
-if ($section_filter) {
-    $where_clause .= " AND students.section_id = '$section_filter'";
+if (!empty($section_filter)) {
+    $section_filter_esc = mysqli_real_escape_string($conn, $section_filter);
+    $where .= " AND s.section_id = '$section_filter_esc'";
 }
 
-// Fetch students and their payment status
+// 5) Query to get all challans and sum of payments
 $query = "
     SELECT 
-        students.student_id, 
-        students.student_name, 
-        classes.class_name, 
-        sections.section_name, 
-        IFNULL(payments.payment_status, 'unpaid') AS payment_status
-    FROM students
-    JOIN classes ON students.class_id = classes.class_id
-    JOIN sections ON students.section_id = sections.section_id
-    LEFT JOIN payments ON payments.student_id = students.student_id
-    WHERE 1 $where_clause
-    ORDER BY students.student_name ASC
+        c.challan_id,
+        c.challan_month,
+        c.challan_session,
+        c.challan_date,
+        c.due_date,
+        c.total_amount,
+        c.arrears,
+        c.discount,
+        c.final_amount,
+        c.status AS challan_status,
+        
+        s.student_id,
+        s.student_name,
+        cl.class_name,
+        sec.section_name,
+        
+        -- Sum of all payments for this challan
+        COALESCE(SUM(p.amount_paid), 0) AS amount_paid
+    FROM challans c
+    JOIN students s ON c.student_id = s.student_id
+    JOIN classes cl ON s.class_id = cl.class_id
+    JOIN sections sec ON s.section_id = sec.section_id
+    LEFT JOIN payments p ON p.challan_id = c.challan_id
+    WHERE $where
+    GROUP BY c.challan_id
+    ORDER BY c.challan_id DESC
 ";
-$students_result = $conn->query($query);
+
+$result = $conn->query($query);
 ?>
 
 <div class="content-body">
-    <div class="row page-titles mx-0">
-        <div class="col p-md-0">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="javascript:void(0)">Dashboard</a></li>
-                <li class="breadcrumb-item active"><a href="javascript:void(0)">View All Students</a></li>
-            </ol>
-        </div>
-    </div>
-
     <div class="container-fluid">
+        <h2>View Challans</h2>
+
+        <!-- Filter Form (optional) -->
+        <form method="get" action="viewchallans.php">
+            <div class="form-row">
+                <!-- Class Filter -->
+                <div class="form-group col-md-3">
+                    <label for="class-id">Class</label>
+                    <select class="form-control" id="class-id" name="class_id">
+                        <option value="">All Classes</option>
+                        <?php foreach ($classes as $cls): ?>
+                            <option value="<?= $cls['class_id'] ?>"
+                                <?= ($class_filter == $cls['class_id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cls['class_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Section Filter -->
+                <div class="form-group col-md-3">
+                    <label for="section-id">Section</label>
+                    <select class="form-control" id="section-id" name="section_id">
+                        <option value="">All Sections</option>
+                        <?php foreach ($sections as $sec): ?>
+                            <option value="<?= $sec['section_id'] ?>"
+                                <?= ($section_filter == $sec['section_id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sec['section_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group col-md-2" style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary">
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Challans Table -->
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card mt-3">
                     <div class="card-body">
-                        <h4 class="card-title">All Students and Payment Status</h4>
+                        <h4 class="card-title">Challan Records</h4>
 
-                        <!-- Filter Form -->
-                        <form method="get" action="viewstudents.php">
-                            <div class="form-row">
-                                <div class="form-group col-md-3">
-                                    <label for="class-id">Class</label>
-                                    <select class="form-control" id="class-id" name="class_id">
-                                        <option value="">All Classes</option>
-                                        <?php while ($row = $classes_result->fetch_assoc()): ?>
-                                            <option value="<?= $row['class_id'] ?>" <?= ($class_filter == $row['class_id']) ? 'selected' : '' ?>><?= $row['class_name'] ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-
-                                <div class="form-group col-md-3">
-                                    <label for="section-id">Section</label>
-                                    <select class="form-control" id="section-id" name="section_id">
-                                        <option value="">All Sections</option>
-                                        <?php while ($row = $sections_result->fetch_assoc()): ?>
-                                            <option value="<?= $row['section_id'] ?>" <?= ($section_filter == $row['section_id']) ? 'selected' : '' ?>><?= $row['section_name'] ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-
-                                <div class="form-group col-md-2">
-                                    <button type="submit" class="btn btn-primary btn-block">Filter</button>
-                                </div>
-                            </div>
-                        </form>
-
-                        <!-- Student List -->
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>Challan ID</th>
                                     <th>Student Name</th>
                                     <th>Class</th>
                                     <th>Section</th>
-                                    <th>Payment Status</th>
+                                    <th>Month</th>
+                                    <th>Session</th>
+                                    <th>Total Fee</th>
+                                    <th>Arrears</th>
+                                    <th>Discount</th>
+                                    <th>Final Amount</th>
+                                    <th>Amount Paid</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if ($students_result->num_rows > 0): ?>
-                                    <?php while ($row = $students_result->fetch_assoc()): ?>
+                                <?php if ($result && $result->num_rows > 0): ?>
+                                    <?php while ($row = $result->fetch_assoc()): ?>
+                                        <?php
+                                        $challanID   = $row['challan_id'];
+                                        $studentName = $row['student_name'];
+                                        $className   = $row['class_name'];
+                                        $sectionName = $row['section_name'];
+                                        $month       = $row['challan_month'];
+                                        $sessionVal  = $row['challan_session'];
+                                        $totalFee    = $row['total_amount'];
+                                        $arrears     = $row['arrears'];
+                                        $discount    = $row['discount'];
+                                        $finalAmt    = $row['final_amount'];
+                                        $paid        = $row['amount_paid'];
+                                        $status      = $row['challan_status'];
+                                        ?>
                                         <tr>
-                                            <td><?= $row['student_id'] ?></td>
-                                            <td><?= $row['student_name'] ?></td>
-                                            <td><?= $row['class_name'] ?></td>
-                                            <td><?= $row['section_name'] ?></td>
+                                            <td><?= $challanID ?></td>
+                                            <td><?= htmlspecialchars($studentName) ?></td>
+                                            <td><?= htmlspecialchars($className) ?></td>
+                                            <td><?= htmlspecialchars($sectionName) ?></td>
+                                            <td><?= htmlspecialchars($month) ?></td>
+                                            <td><?= htmlspecialchars($sessionVal) ?></td>
+                                            <td><?= number_format($totalFee, 2) ?></td>
+                                            <td><?= number_format($arrears, 2) ?></td>
+                                            <td><?= number_format($discount, 2) ?></td>
+                                            <td><?= number_format($finalAmt, 2) ?></td>
+                                            <td><?= number_format($paid, 2) ?></td>
                                             <td>
-                                                <?php if ($row['payment_status'] == 'paid'): ?>
+                                                <?php if ($status === 'paid'): ?>
                                                     <span class="badge badge-success">Paid</span>
+                                                <?php elseif ($status === 'partially_paid'): ?>
+                                                    <span class="badge badge-warning">Partially Paid</span>
                                                 <?php else: ?>
                                                     <span class="badge badge-danger">Unpaid</span>
                                                 <?php endif; ?>
@@ -117,19 +176,22 @@ $students_result = $conn->query($query);
                                     <?php endwhile; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="5" class="text-center">No Students Found</td>
+                                        <td colspan="12" class="text-center">
+                                            No Challans Found
+                                        </td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
+                    </div><!-- card-body -->
+                </div><!-- card -->
+            </div><!-- col -->
+        </div><!-- row -->
+    </div><!-- container-fluid -->
+</div><!-- content-body -->
 
 <?php
 $conn->close();
-include 'footer.php';  // Optional: Add footer
+include 'footer.php';  // Optional
 ?>
