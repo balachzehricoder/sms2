@@ -73,8 +73,8 @@
                           <i class="fa-solid fa-user-tie"></i><span class="nav-text">Academic Module</span>
                       </a>
                       <ul aria-expanded="false">
-                          <li><a href="academic">View Exams</a></li>
-                          <li><a href="viewadmin">View users</a></li>
+                          <li><a href="academic">Manage Academics</a></li>
+                          <!-- <li><a href="viewadmin">View users</a></li> -->
 
                       </ul>
                   </li>

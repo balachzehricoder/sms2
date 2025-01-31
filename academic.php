@@ -75,7 +75,7 @@ require_once 'sidebar.php';
                     ['label' => 'Manage Subjects',             'url' => 'manage_subjects.php'],
                 ],
                 [
-                    ['label' => 'Assign Subjects To Class',    'url' => 'assign_subjects_class.php'],
+                    ['label' => 'Assign Subjects To Class',    'url' => 'class_subjects.php'],
                     ['label' => 'Teachers Subject Allocation', 'url' => 'teachers_subject_allocation.php'],
                 ],
                 [
