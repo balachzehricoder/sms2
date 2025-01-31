@@ -1,14 +1,8 @@
 <?php
 include 'confiq.php'; // Include database configuration
-<<<<<<< HEAD
-include 'header.php';
-include 'sidebar.php';
-// Enable error reporting for debugging
-=======
 include 'header.php'; // Include the header
 include 'sidebar.php'; // Include the sidebar
 
->>>>>>> e3dedaa5a2b0b8330f9c46d5ddc77d39a200d80f
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -74,4 +68,5 @@ $sessions = $conn->query("SELECT * FROM sessions ORDER BY session_name ASC") or 
     </div>
 </div>
 
-<?php include 'footer.php'; // Include the footer ?>
+<?php include 'footer.php'; // Include the footer 
+?>
