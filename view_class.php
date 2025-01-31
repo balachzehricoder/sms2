@@ -119,8 +119,8 @@ $studentsResult = $stmt->get_result();
                                 </table>
                             </div>
                             <button type="submit" class="btn btn-primary">Update</button>
+                            <a href="classwise" class="btn btn-secondary">Back</a>
                         </form>
-                        <a href="classwise" class="btn btn-secondary">Back</a>
                     </div>
                 </div>
             </div>

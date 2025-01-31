@@ -1,5 +1,5 @@
 <?php
-include 'confiq.php'; // Corrected spelling from 'confiq.php'
+include 'confiq.php'; // Include database configuration
 include 'header.php';
 include 'sidebar.php';
 
@@ -7,20 +7,6 @@ include 'sidebar.php';
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
-// Fetch all struck-off students directly from the `students` table
-$struckOffQuery = "
-    SELECT 
-        s.student_id AS student_id,
-        s.family_code,
-        s.student_name,
-        s.class_id,
-        s.section_id
-    FROM students s
-    WHERE s.status = 1";
-
-
-$struckOffResult = $conn->query($struckOffQuery);
 ?>
 
 <div class="content-body">
@@ -39,6 +25,13 @@ $struckOffResult = $conn->query($struckOffQuery);
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">Struck-Off Students</h4>
+
+                        <!-- Search Bar -->
+                        <div class="mb-3">
+                            <input type="text" id="searchStudent" class="form-control" placeholder="Search by Student Name">
+                        </div>
+
+                        <!-- Table -->
                         <div class="table-responsive">
                             <table class="table table-striped table-bordered">
                                 <thead>
@@ -51,29 +44,11 @@ $struckOffResult = $conn->query($struckOffQuery);
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php
-                                    if ($struckOffResult && $struckOffResult->num_rows > 0) {
-                                        $sno = 1;
-                                        while ($studentRow = $struckOffResult->fetch_assoc()) {
-                                            echo "<tr>
-                                                <td>" . $sno++ . "</td>
-                                                <td>" . htmlspecialchars($studentRow['student_name']) . "</td>
-                                                <td>" . htmlspecialchars($studentRow['family_code']) . "</td>
-                                                <td>" . htmlspecialchars($studentRow['class_id']) . "</td>
-                                                <td>" . htmlspecialchars($studentRow['section_id']) . "</td>
-                                                <td>
-                                                    <form method='POST' action='reinstate_student.php' style='display:inline;'>
-                                                        <input type='hidden' name='student_id' value='" . $studentRow['student_id'] . "'>
-                                                        <button type='submit' class='btn btn-success'>Reinstate</button>
-                                                    </form>
-                                                </td>
-                                            </tr>";
-                                        }
-                                    } else {
-                                        echo "<tr><td colspan='7'>No struck-off students found</td></tr>";
-                                    }
-                                    ?>
+                                <tbody id="studentsTable">
+                                    <!-- Data will be loaded here via AJAX -->
+                                    <tr>
+                                        <td colspan="6" class="text-center">Loading...</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -83,4 +58,36 @@ $struckOffResult = $conn->query($struckOffQuery);
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Load initial data
+    function loadStudents(search = '') {
+        $.ajax({
+            url: 'fetch_struck_off_students.php',
+            type: 'GET',
+            data: {
+                search: search
+            },
+            success: function(response) {
+                $('#studentsTable').html(response);
+            },
+            error: function() {
+                $('#studentsTable').html('<tr><td colspan="6" class="text-center">Failed to load data.</td></tr>');
+            }
+        });
+    }
+
+    // Load students on page load
+    $(document).ready(function() {
+        loadStudents();
+
+        // Search functionality
+        $('#searchStudent').on('input', function() {
+            const search = $(this).val();
+            loadStudents(search);
+        });
+    });
+</script>
+
 <?php include 'footer.php'; ?>
