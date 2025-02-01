@@ -79,8 +79,8 @@ require_once 'sidebar.php';
                     ['label' => 'Teachers Subject Allocation', 'url' => 'teacher_subjects.php'],
                 ],
                 [
-                    ['label' => 'Award List',                 'url' => 'award_list.php'],
-                    ['label' => 'Grade Settings',             'url' => 'grade_settings.php'],
+                    ['label' => 'Student Grades',                 'url' => 'grades.php'],
+                    ['label' => 'Assign Marks',             'url' => 'grade_settings.php'],
                 ],
                 [
                     ['label' => 'Academic Performance Criteria', 'url' => 'performance_criteria.php'],
@@ -91,7 +91,7 @@ require_once 'sidebar.php';
                     ['label' => 'Academic Settings',         'url' => 'academic_settings.php'],
                 ],
                 [
-                    ['label' => 'Users Exam Activity Report', 'url' => 'exam_activity_report.php'],
+                    ['label' => 'Students Marksheets', 'url' => 'student_marksheet'],
                 ],
             ];
             ?>
