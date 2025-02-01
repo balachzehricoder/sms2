@@ -94,17 +94,21 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
             $marksResult = $conn->query($marksQuery);
         ?>
 
-            <div class="mt-4">
+            <div class="mt-4" id="marksheet-content">
                 <h5>Marksheet for <?= htmlspecialchars($student['student_name']); ?></h5>
+
                 <!-- Export Marksheet Button -->
-                <form method="POST" action="export_student_marksheet.php" class="mt-3">
+                <form method="POST" action="export_student_marksheet.php" class="mt-3 no-print">
                     <input type="hidden" name="student_id" value="<?= $student_id; ?>">
                     <input type="hidden" name="exam_id" value="<?= $exam_id; ?>">
                     <button type="submit" class="btn btn-success">Export Marksheet</button>
+                    <button onclick="printMarksheet()" class="btn btn-secondary no-print">Print Marksheet</button>
                 </form>
 
+                <!-- Print Marksheet Button -->
+
                 <?php if ($marksResult->num_rows > 0): ?>
-                    <table class="table table-bordered">
+                    <table class="table table-bordered mt-3">
                         <thead>
                             <tr>
                                 <th>Subject</th>
@@ -210,6 +214,60 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
             fetchStudents();
         }
     });
+
+    // Print Marksheet Function
+    function printMarksheet() {
+        // Hide elements before printing
+        const elementsToHide = ['.sidebar', '.header', '.footer', 'form', '.btn', '.no-print'];
+
+        elementsToHide.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.display = 'none';
+            });
+        });
+
+        // Trigger print
+        window.print();
+
+        // Show elements after printing
+        elementsToHide.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.display = '';
+            });
+        });
+    }
 </script>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+            /* Hide everything initially */
+        }
+
+        #marksheet-content,
+        #marksheet-content * {
+            visibility: visible;
+            /* Only make the marksheet visible */
+        }
+
+        #marksheet-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .no-print,
+        form,
+        .sidebar,
+        .header,
+        .footer {
+            display: none !important;
+            /* Ensure these elements are hidden */
+        }
+    }
+</style>
+
 
 <?php require_once 'footer.php'; ?>
