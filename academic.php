@@ -92,6 +92,7 @@ require_once 'sidebar.php';
                 ],
                 [
                     ['label' => 'Students Marksheets', 'url' => 'student_marksheet'],
+                    ['label' => 'Classwise Marksheets', 'url' => 'class_report'],
                 ],
             ];
             ?>
