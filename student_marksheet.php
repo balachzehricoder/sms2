@@ -252,20 +252,29 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
 
     // Print Functionality
     function printMarksheet() {
-        document.querySelectorAll('.no-print, .sidebar, .header, .footer').forEach(el => el.style.display = 'none');
+        // Hide unnecessary elements
+        const elementsToHide = document.querySelectorAll('.no-print, .sidebar, .header, .footer');
+        elementsToHide.forEach(el => el.style.display = 'none');
+
+        // Trigger print
         window.print();
-        document.querySelectorAll('.no-print, .sidebar, .header, .footer').forEach(el => el.style.display = '');
+
+        // Restore hidden elements after printing
+        elementsToHide.forEach(el => el.style.display = '');
     }
 </script>
 
 <style>
     @media print {
+        body * {
+            visibility: hidden;
+            /* Hide everything */
+        }
 
-        .no-print,
-        .sidebar,
-        .header,
-        .footer {
-            display: none !important;
+        #marksheet-content,
+        #marksheet-content * {
+            visibility: visible;
+            /* Show only the marksheet content */
         }
 
         #marksheet-content {
@@ -273,8 +282,37 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
             top: 0;
             left: 0;
             width: 100%;
+            padding: 20px;
+        }
+
+        .no-print,
+        .sidebar,
+        .header,
+        .footer {
+            display: none !important;
+            /* Ensure all unnecessary elements are hidden */
+        }
+
+        /* Adjust table borders and font sizes for printing clarity */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        h5 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
         }
     }
 </style>
+
 
 <?php require_once 'footer.php'; ?>
