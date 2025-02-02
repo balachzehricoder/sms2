@@ -90,8 +90,17 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
                 WHERE em.student_id = $student_id
                   AND em.exam_id = $exam_id
                 ORDER BY sub.subject_name";
-
             $marksResult = $conn->query($marksQuery);
+
+            // Fetch student performance data
+            $performanceQuery = "
+                SELECT pc.criteria_name, sp.score, cr.remark
+                FROM student_performance sp
+                JOIN performance_criteria pc ON sp.criteria_id = pc.id
+                LEFT JOIN criteria_remarks cr ON sp.score = cr.score
+                WHERE sp.student_id = $student_id
+                ORDER BY pc.criteria_name";
+            $performanceResult = $conn->query($performanceQuery);
         ?>
 
             <div class="mt-4" id="marksheet-content">
@@ -105,8 +114,7 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
                     <button onclick="printMarksheet()" class="btn btn-secondary no-print">Print Marksheet</button>
                 </form>
 
-                <!-- Print Marksheet Button -->
-
+                <!-- Marks Section -->
                 <?php if ($marksResult->num_rows > 0): ?>
                     <table class="table table-bordered mt-3">
                         <thead>
@@ -186,6 +194,33 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
                 <?php else: ?>
                     <p>No marks found for the selected student and exam.</p>
                 <?php endif; ?>
+
+                <!-- Student Performance Section -->
+                <div class="mt-4">
+                    <h5>Student Performance Evaluation</h5>
+                    <?php if ($performanceResult->num_rows > 0): ?>
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    <th>Score</th>
+                                    <th>Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while ($performance = $performanceResult->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($performance['criteria_name']); ?></td>
+                                        <td><?= $performance['score']; ?></td>
+                                        <td><?= htmlspecialchars($performance['remark'] ?? ''); ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <p>No performance evaluation data found for this student.</p>
+                    <?php endif; ?>
+                </div>
             </div>
 
         <?php endif; ?>
@@ -208,47 +243,29 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
         }
     }
 
-    // Load students if class and section are already selected (for persistent filters)
-    window.addEventListener('DOMContentLoaded', (event) => {
+    // Load students if class and section are already selected
+    window.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById("class_id").value && document.getElementById("section_id").value) {
             fetchStudents();
         }
     });
 
-    // Print Marksheet Function
+    // Print Functionality
     function printMarksheet() {
-        // Hide elements before printing
-        const elementsToHide = ['.sidebar', '.header', '.footer', 'form', '.btn', '.no-print'];
-
-        elementsToHide.forEach(selector => {
-            document.querySelectorAll(selector).forEach(el => {
-                el.style.display = 'none';
-            });
-        });
-
-        // Trigger print
+        document.querySelectorAll('.no-print, .sidebar, .header, .footer').forEach(el => el.style.display = 'none');
         window.print();
-
-        // Show elements after printing
-        elementsToHide.forEach(selector => {
-            document.querySelectorAll(selector).forEach(el => {
-                el.style.display = '';
-            });
-        });
+        document.querySelectorAll('.no-print, .sidebar, .header, .footer').forEach(el => el.style.display = '');
     }
 </script>
 
 <style>
     @media print {
-        body * {
-            visibility: hidden;
-            /* Hide everything initially */
-        }
 
-        #marksheet-content,
-        #marksheet-content * {
-            visibility: visible;
-            /* Only make the marksheet visible */
+        .no-print,
+        .sidebar,
+        .header,
+        .footer {
+            display: none !important;
         }
 
         #marksheet-content {
@@ -257,17 +274,7 @@ $exams = $conn->query("SELECT * FROM exams ORDER BY start_date DESC");
             left: 0;
             width: 100%;
         }
-
-        .no-print,
-        form,
-        .sidebar,
-        .header,
-        .footer {
-            display: none !important;
-            /* Ensure these elements are hidden */
-        }
     }
 </style>
-
 
 <?php require_once 'footer.php'; ?>
