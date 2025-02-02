@@ -79,7 +79,7 @@ require_once 'sidebar.php';
                     ['label' => 'Teachers Subject Allocation', 'url' => 'teacher_subjects.php'],
                 ],
                 [
-                    ['label' => 'Student Grades',                 'url' => 'grades.php'],
+                    ['label' => 'Subject-Wise Grades',                 'url' => 'grades.php'],
                     ['label' => 'Assign Marks',             'url' => 'grade_settings.php'],
                 ],
                 [
