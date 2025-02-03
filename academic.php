@@ -88,7 +88,7 @@ require_once 'sidebar.php';
                 ],
                 [
                     ['label' => 'Add Academic Performance', 'url' => 'add_performance.php'],
-                    ['label' => 'Academic Settings',         'url' => 'academic_settings.php'],
+                    ['label' => 'Signature Settings',         'url' => 'signature_settings.php'],
                 ],
                 [
                     ['label' => 'Students Marksheets', 'url' => 'student_marksheet'],
