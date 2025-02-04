@@ -12,21 +12,22 @@ use PhpOffice\PhpSpreadsheet\Chart\Title;
 use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeries;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 // Database connection
 require_once 'confiq.php';
 
 $student_id = intval($_POST['student_id']);
-$exam_id = intval($_POST['exam_id']);
+$exam_id    = intval($_POST['exam_id']);
 
-// Fetch student details
-$studentQuery = "SELECT student_name, family_code, father_name, class_id, section_id FROM students WHERE student_id = $student_id";
+// Fetch student details (including student_image)
+$studentQuery = "SELECT student_name, family_code, father_name, class_id, section_id, student_image FROM students WHERE student_id = $student_id";
 $studentResult = $conn->query($studentQuery);
 $student = $studentResult->fetch_assoc();
 
 // Fetch class and section names
-$classQuery = "SELECT class_name FROM classes WHERE class_id = {$student['class_id']}";
-$classResult = $conn->query($classQuery)->fetch_assoc();
+$classQuery   = "SELECT class_name FROM classes WHERE class_id = {$student['class_id']}";
+$classResult  = $conn->query($classQuery)->fetch_assoc();
 $sectionQuery = "SELECT section_name FROM sections WHERE section_id = {$student['section_id']}";
 $sectionResult = $conn->query($sectionQuery)->fetch_assoc();
 
@@ -52,11 +53,15 @@ $performanceQuery = "
     WHERE sp.student_id = $student_id";
 $performanceResult = $conn->query($performanceQuery);
 
+// Fetch signature record (adjust the query if needed)
+$signatureQuery = "SELECT exam_head_signature, principal_signature FROM signatures LIMIT 1";
+$signatureResult = $conn->query($signatureQuery)->fetch_assoc();
+
 // Create Spreadsheet
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
-// Adjust column widths
+// Adjust column widths (using columns A through F)
 $sheet->getColumnDimension('A')->setWidth(20);
 $sheet->getColumnDimension('B')->setWidth(15);
 $sheet->getColumnDimension('C')->setWidth(15);
@@ -64,68 +69,121 @@ $sheet->getColumnDimension('D')->setWidth(10);
 $sheet->getColumnDimension('E')->setWidth(10);
 $sheet->getColumnDimension('F')->setWidth(15);
 
-// Header Section
-$sheet->mergeCells('A1:F1');
-$sheet->setCellValue('A1', 'HAZARA PUBLIC SCHOOL & COLLEGE JAMBER');
-$sheet->getStyle('A1')->applyFromArray([
+// ========= Add Images =========
+
+// -- School Logo (placed in A1) --
+$drawingLogo = new Drawing();
+$drawingLogo->setName('School Logo');
+$drawingLogo->setDescription('School Logo');
+$drawingLogo->setPath('images/logo.png'); // update with your actual logo path
+$drawingLogo->setHeight(100);  // Enlarged logo
+$drawingLogo->setCoordinates('A1');
+$drawingLogo->setOffsetX(5);
+$drawingLogo->setOffsetY(5);
+$drawingLogo->setWorksheet($sheet);
+
+// -- Student Image (placed at F5 so it appears at the right of student info) --
+if (!empty($student['student_image']) && file_exists($student['student_image'])) {
+    $drawingStudent = new Drawing();
+    $drawingStudent->setName('Student Image');
+    $drawingStudent->setDescription('Student Image');
+    $drawingStudent->setPath($student['student_image']);
+    $drawingStudent->setHeight(70);  // Adjusted image height
+    $drawingStudent->setCoordinates('F5');
+    $drawingStudent->setOffsetX(5);
+    $drawingStudent->setOffsetY(5);
+    $drawingStudent->setWorksheet($sheet);
+}
+
+// ========= Header Section (starting at row 1) =========
+
+// Row 1: Merge B1:F1 for School Name (logo is in A1)
+$sheet->mergeCells('B1:F1');
+$sheet->setCellValue('B1', 'HAZARA PUBLIC SCHOOL & COLLEGE JAMBER');
+$sheet->getStyle('B1')->applyFromArray([
     'font' => ['bold' => true, 'size' => 16],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
 ]);
 
+// Row 2: School Contact Information (merged across A2:F2)
 $sheet->mergeCells('A2:F2');
-$sheet->setCellValue('A2', 'Result Card ANNUAL EXAM 2024-25');
+$sheet->setCellValue('A2', "Affiliated with Lahore Board | Award for Performance (Govt. of Pakistan) Boys H/S 11152 | Girls H/S 12103\nBoys College 1129 | Girls College 1225 Hazara Road, Jamber, Tehsil Pattoki, District Kasur\nPunjab, Pakistan www.hazara.edu.pk");
 $sheet->getStyle('A2')->applyFromArray([
+    'font' => ['size' => 10],
+    'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical'   => Alignment::VERTICAL_CENTER,
+        'wrapText'   => true
+    ],
+]);
+
+// Row 3: Contact Numbers (merged A3:F3)
+$sheet->mergeCells('A3:F3');
+$sheet->setCellValue('A3', '03000132470 | 03005353470 | info@hazara.edu.pk');
+$sheet->getStyle('A3')->applyFromArray([
+    'font' => ['size' => 10],
+    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+]);
+
+// Row 4: Result Card Title (merged A4:F4)
+$sheet->mergeCells('A4:F4');
+$sheet->setCellValue('A4', 'Result Card ANNUAL EXAM 2024-25');
+$sheet->getStyle('A4')->applyFromArray([
     'font' => ['bold' => true, 'size' => 12],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
 ]);
 
-// Student Information
-$sheet->setCellValue('A4', 'Family Code:');
-$sheet->setCellValue('B4', $student['family_code']);
-$sheet->setCellValue('D4', 'Class:');
-$sheet->setCellValue('E4', $classResult['class_name'] . ' (' . $sectionResult['section_name'] . ')');
+// ========= Student Information =========
+// Row 5: Family Code and Class
+$sheet->setCellValue('A5', 'Family Code:');
+$sheet->setCellValue('B5', $student['family_code']);
+$sheet->setCellValue('D5', 'Class:');
+$sheet->setCellValue('E5', $classResult['class_name'] . ' (' . $sectionResult['section_name'] . ')');
 
-$sheet->setCellValue('A5', 'Name:');
-$sheet->setCellValue('B5', $student['student_name']);
-$sheet->setCellValue('A6', 'Father Name:');
-$sheet->setCellValue('B6', $student['father_name']);
+// Row 6: Name
+$sheet->setCellValue('A6', 'Name:');
+$sheet->setCellValue('B6', $student['student_name']);
 
-// Styling for student details
-$sheet->getStyle('A4:A6')->applyFromArray([
+// Row 7: Father Name
+$sheet->setCellValue('A7', 'Father Name:');
+$sheet->setCellValue('B7', $student['father_name']);
+
+$sheet->getStyle('A5:A7')->applyFromArray([
+    'font' => ['bold' => true],
+    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
+]);
+$sheet->getStyle('B5:B7')->applyFromArray([
+    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
+]);
+$sheet->getStyle('D5')->applyFromArray([
     'font' => ['bold' => true],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
 ]);
 
-$sheet->getStyle('B4:B6')->applyFromArray([
-    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
-]);
-
-$sheet->getStyle('D4')->applyFromArray([
-    'font' => ['bold' => true],
-    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
-]);
-
-
-// Result Overview Table
-$sheet->mergeCells('A8:F8');
-$sheet->setCellValue('A8', 'Result Overview');
-$sheet->getStyle('A8')->applyFromArray([
+// ========= Result Overview Table =========
+// We now start the result table 2 rows below the current start.
+// Previously, it started at row 8; now we set it to row 10.
+$startRow = 10;
+$sheet->mergeCells("A{$startRow}:F{$startRow}");
+$sheet->setCellValue("A{$startRow}", 'Result Overview');
+$sheet->getStyle("A{$startRow}")->applyFromArray([
     'font' => ['bold' => true],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFDDDDDD']]
 ]);
 
+// Table Headers at row 11
 $headers = ['Subject', 'Total Marks', 'Obt. Marks', '%', 'Grade', 'Result'];
-$sheet->fromArray($headers, null, 'A9');
-$sheet->getStyle('A9:F9')->applyFromArray([
+$sheet->fromArray($headers, null, 'A' . ($startRow + 1));
+$sheet->getStyle("A" . ($startRow + 1) . ":F" . ($startRow + 1))->applyFromArray([
     'font' => ['bold' => true],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFDDDDDD']],
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
 ]);
 
-// Fill Marks Data
-$rowNum = 10;
+// Fill Marks Data starting at row 12
+$rowNum = $startRow + 2;
 $totalObtained = 0;
 $totalMax = 0;
 $subjectNames = [];
@@ -136,8 +194,11 @@ while ($row = $marksResult->fetch_assoc()) {
     $grade = $percentage >= 90 ? 'A+' : ($percentage >= 80 ? 'A' : ($percentage >= 70 ? 'B' : ($percentage >= 60 ? 'C' : ($percentage >= 50 ? 'D' : 'F'))));
     $resultStatus = $percentage >= 50 ? 'Passed' : 'Failed';
 
-    $sheet->fromArray([$row['subject_name'], $row['max_marks'], $row['marks_obtained'], number_format($percentage, 2) . '%', $grade, $resultStatus], null, "A{$rowNum}");
-
+    $sheet->fromArray(
+        [$row['subject_name'], $row['max_marks'], $row['marks_obtained'], number_format($percentage, 2) . '%', $grade, $resultStatus],
+        null,
+        "A{$rowNum}"
+    );
     $sheet->getStyle("A{$rowNum}:F{$rowNum}")->applyFromArray([
         'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
@@ -145,10 +206,8 @@ while ($row = $marksResult->fetch_assoc()) {
 
     $totalObtained += $row['marks_obtained'];
     $totalMax += $row['max_marks'];
-
     $subjectNames[] = $row['subject_name'];
     $marksObtained[] = $row['marks_obtained'];
-
     $rowNum++;
 }
 
@@ -165,7 +224,7 @@ $sheet->getStyle("A{$rowNum}:F{$rowNum}")->applyFromArray([
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
 ]);
 
-// Percentage Remarks
+// Percentage Remarks (next row)
 $sheet->mergeCells("A" . ($rowNum + 2) . ":F" . ($rowNum + 2));
 $sheet->setCellValue("A" . ($rowNum + 2), "Congratulations on your exceptional achievement and earning an $overallGrade grade – your hard work truly paid off!");
 $sheet->getStyle("A" . ($rowNum + 2))->applyFromArray([
@@ -176,17 +235,15 @@ $sheet->getStyle("A" . ($rowNum + 2))->applyFromArray([
 // Performance Criteria (with Remarks)
 $criteriaHeaders = [];
 $criteriaRemarks = [];
-
 while ($criteria = $performanceResult->fetch_assoc()) {
-    $criteriaHeaders[] = $criteria['criteria_name'];   // Criteria Name
-    $criteriaRemarks[] = $criteria['remark'];          // Corresponding Remark
+    $criteriaHeaders[] = $criteria['criteria_name'];
+    $criteriaRemarks[] = $criteria['remark'];
 }
-
 $performanceRowStart = $rowNum + 4;
 $sheet->fromArray($criteriaHeaders, null, "A{$performanceRowStart}");
 $sheet->fromArray($criteriaRemarks, null, "A" . ($performanceRowStart + 1));
-
-$sheet->getStyle("A{$performanceRowStart}:" . chr(64 + count($criteriaHeaders)) . ($performanceRowStart + 1))->applyFromArray([
+$lastCol = chr(64 + count($criteriaHeaders));
+$sheet->getStyle("A{$performanceRowStart}:{$lastCol}" . ($performanceRowStart + 1))->applyFromArray([
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
     'font' => ['bold' => true]
@@ -198,21 +255,18 @@ $instructions = [
     "Annual position based on First, Second and Third term exam.",
     "Fail in more than 2 subjects will consider student as Fail."
 ];
-
 $instructionRowStart = $rowNum + 7;
 foreach ($instructions as $index => $instruction) {
     $sheet->setCellValue("A" . ($instructionRowStart + $index), $instruction);
     $sheet->mergeCells("A" . ($instructionRowStart + $index) . ":F" . ($instructionRowStart + $index));
 }
-
 $sheet->getStyle("A" . ($instructionRowStart) . ":F" . ($instructionRowStart + count($instructions)))->applyFromArray([
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
 ]);
 
-// Create Bar Chart for Marks Below the Table
-$labels = [new DataSeriesValues('String', "'Worksheet'!\$A\$10:\$A\$" . ($rowNum - 1), null, count($subjectNames))];
-$values = [new DataSeriesValues('Number', "'Worksheet'!\$C\$10:\$C\$" . ($rowNum - 1), null, count($marksObtained))];
-
+// Create Bar Chart for Marks
+$labels = [new DataSeriesValues('String', "'Worksheet'!\$A\$" . ($startRow + 2) . ":\$A\$" . ($rowNum - 1), null, count($subjectNames))];
+$values = [new DataSeriesValues('Number', "'Worksheet'!\$C\$" . ($startRow + 2) . ":\$C\$" . ($rowNum - 1), null, count($marksObtained))];
 $series = new DataSeries(
     DataSeries::TYPE_BARCHART,
     DataSeries::GROUPING_CLUSTERED,
@@ -221,7 +275,6 @@ $series = new DataSeries(
     $labels,
     $values
 );
-
 $plotArea = new PlotArea(null, [$series]);
 $chart = new Chart(
     'Marks Chart',
@@ -229,12 +282,41 @@ $chart = new Chart(
     new Legend(Legend::POSITION_BOTTOM, null, false),
     $plotArea
 );
-
-$chart->setTopLeftPosition('A' . ($instructionRowStart + count($instructions) + 2));
-$chart->setBottomRightPosition('F' . ($instructionRowStart + count($instructions) + 20));
+// Position the chart below the instructions; here we use column G for extra width.
+$chartTopRow = $instructionRowStart + count($instructions) + 2;
+$chart->setTopLeftPosition("A{$chartTopRow}");
+$chart->setBottomRightPosition("G" . ($chartTopRow + 12));
 $sheet->addChart($chart);
 
-// Clear buffer and output the file
+// ========= Add Signatures =========
+// Position the signatures below the chart.
+$signatureRow = $chartTopRow + 14;
+if (!empty($signatureResult['exam_head_signature']) && file_exists($signatureResult['exam_head_signature'])) {
+    $drawingExamSignature = new Drawing();
+    $drawingExamSignature->setName('Exam Head Signature');
+    $drawingExamSignature->setDescription('Exam Head Signature');
+    $drawingExamSignature->setPath($signatureResult['exam_head_signature']);
+    $drawingExamSignature->setHeight(50);
+    $drawingExamSignature->setCoordinates("B{$signatureRow}");
+    $drawingExamSignature->setOffsetX(10);
+    $drawingExamSignature->setWorksheet($sheet);
+}
+if (!empty($signatureResult['principal_signature']) && file_exists($signatureResult['principal_signature'])) {
+    $drawingPrincipalSignature = new Drawing();
+    $drawingPrincipalSignature->setName('Principal Signature');
+    $drawingPrincipalSignature->setDescription('Principal Signature');
+    $drawingPrincipalSignature->setPath($signatureResult['principal_signature']);
+    $drawingPrincipalSignature->setHeight(50);
+    $drawingPrincipalSignature->setCoordinates("E{$signatureRow}");
+    $drawingPrincipalSignature->setOffsetX(10);
+    $drawingPrincipalSignature->setWorksheet($sheet);
+}
+$sheet->setCellValue("B" . ($signatureRow + 4), "Exam Head");
+$sheet->setCellValue("E" . ($signatureRow + 4), "Principal");
+$sheet->getStyle("B" . ($signatureRow + 4) . ":E" . ($signatureRow + 4))->getFont()->setBold(true);
+$sheet->getStyle("B" . ($signatureRow + 4) . ":E" . ($signatureRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+// Output the file
 if (ob_get_contents()) ob_end_clean();
 $fileName = "{$student['student_name']}_Marksheet.xlsx";
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

@@ -85,6 +85,7 @@ require_once 'sidebar.php';
                 [
                     ['label' => 'Academic Performance Criteria', 'url' => 'performance_criteria.php'],
                     ['label' => 'Academic Performance Heads',    'url' => 'performance_heads.php'],
+                    ['label' => 'Teacher Performance',    'url' => 'teacher_performance'],
                 ],
                 [
                     ['label' => 'Add Academic Performance', 'url' => 'add_performance.php'],
