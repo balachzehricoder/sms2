@@ -85,7 +85,6 @@ require_once 'sidebar.php';
                 [
                     ['label' => 'Academic Performance Criteria', 'url' => 'performance_criteria.php'],
                     ['label' => 'Academic Performance Heads',    'url' => 'performance_heads.php'],
-                    ['label' => 'Teacher Performance',    'url' => 'teacher_performance'],
                 ],
                 [
                     ['label' => 'Add Academic Performance', 'url' => 'add_performance.php'],
@@ -95,6 +94,11 @@ require_once 'sidebar.php';
                     ['label' => 'Students Marksheets', 'url' => 'student_marksheet'],
                     ['label' => 'Classwise Marksheets', 'url' => 'class_report'],
                 ],
+                [
+                    ['label' => 'Teacher Performance',    'url' => 'teacher_performance'],
+                    ['label' => 'All Classes Marksheet',    'url' => 'all_class_markshit'],
+
+                ]
             ];
             ?>
 
