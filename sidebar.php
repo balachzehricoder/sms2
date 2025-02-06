@@ -52,6 +52,8 @@
                       </a>
                       <ul aria-expanded="false">
                           <li><a href="challan">Create Challan</a></li>
+                          <li><a href="viewchallan">view challan</a></li>
+                          <li><a href="feereport">fee reports</a></li>
                           <li><a href="payfees">pay challan</a></li>
                       </ul>
                   </li>
