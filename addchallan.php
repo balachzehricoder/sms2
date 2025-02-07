@@ -69,28 +69,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 3) Calculate total unpaid from previous challans => arrears
             //    Summing all challans that are not 'paid'
             $arrears_query = "
-         SELECT 
-    SUM((ch.total_amount - ch.discount) 
-        - COALESCE((SELECT SUM(p.amount_paid) 
-                    FROM payments p 
-                    WHERE p.challan_id = ch.challan_id), 0)
-    ) AS total_unpaid
-FROM challans ch
-WHERE ch.student_id = '$student_id'
-AND ch.status != 'paid';  -- ✅ Exclude fully paid challans
+    SELECT 
+        SUM((ch.total_amount - ch.discount) 
+            - COALESCE((SELECT SUM(p.amount_paid) 
+                        FROM payments p 
+                        WHERE p.challan_id = ch.challan_id), 0)
+        ) AS total_unpaid
+    FROM challans ch
+    WHERE ch.student_id = '$student_id'
+    AND ch.status != 'paid' 
+    AND ch.challan_date < (SELECT MIN(challan_date) FROM challans WHERE challan_month = '$challan_month' AND student_id = '$student_id')
+";
 
+$arrears_res = $conn->query($arrears_query);
+$arrears = 0.00;
+if ($arrears_res && $row = $arrears_res->fetch_assoc()) {
+    $arrears = max(0, (float)$row['total_unpaid']); // Prevent negative arrears
+}
 
-        ";
-        
-        $arrears_res = $conn->query($arrears_query);
-        $arrears = 0.00;
-        if ($arrears_res && $row = $arrears_res->fetch_assoc()) {
-            $arrears = (float)$row['total_unpaid'];
-        }
-        if ($arrears < 0) {
-            $arrears = 0; // No negative arrears
-        }
-        
 
             // 4) final_amount = baseMonthlyFee + arrears - discount
             $final_amount = $baseMonthlyFee + $arrears - $student_discount;

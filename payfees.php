@@ -16,18 +16,19 @@ function payStudentArrears($conn, $student_id, $paymentAmount)
 {
     $unpaidQuery = "
         SELECT
-            ch.challan_id,
-            ch.final_amount,
-            (
-              ch.final_amount - COALESCE(
-                  (SELECT SUM(p.amount_paid) 
-                   FROM payments p 
-                   WHERE p.challan_id = ch.challan_id), 0
-                )
-            ) AS outstanding_balance
-        FROM challans ch
-        WHERE ch.student_id = ? AND ch.status != 'paid'
-        ORDER BY ch.challan_date ASC, ch.challan_id ASC
+    ch.challan_id,
+    ch.final_amount,
+    (
+      ch.final_amount - COALESCE((
+          SELECT SUM(DISTINCT p.amount_paid) 
+          FROM payments p 
+          WHERE p.challan_id = ch.challan_id
+      ), 0)
+    ) AS outstanding_balance
+FROM challans ch
+WHERE ch.student_id = ? AND ch.status != 'paid'
+ORDER BY ch.challan_date ASC, ch.challan_id ASC;
+
     ";
     
     // Use prepared statements
@@ -91,25 +92,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $family_code = mysqli_real_escape_string($conn, $_POST['family_code']);
 
         $query = "
-            SELECT
-                s.student_id,
-                s.student_name,
-                c.class_name,
-                COALESCE(SUM(ch.final_amount), 0) AS total_fee,
-                COALESCE((SELECT SUM(p2.amount_paid)
-                          FROM payments p2
-                          JOIN challans ch2 ON ch2.challan_id = p2.challan_id
-                          WHERE ch2.student_id = s.student_id), 0) AS total_paid,
-                (COALESCE(SUM(ch.final_amount), 0) 
-                 - COALESCE((SELECT SUM(p2.amount_paid)
-                             FROM payments p2
-                             JOIN challans ch2 ON ch2.challan_id = p2.challan_id
-                             WHERE ch2.student_id = s.student_id), 0)) AS arrears
-            FROM students s
-            JOIN classes c ON s.class_id = c.class_id
-            LEFT JOIN challans ch ON ch.student_id = s.student_id
-            WHERE s.family_code = ?
-            GROUP BY s.student_id, s.student_name, c.class_name
+   SELECT
+    s.student_id,
+    s.student_name,
+    c.class_name,
+    COALESCE(ch.total_fee, 0) AS total_fee,
+    COALESCE(p.total_paid, 0) AS total_paid,
+    (COALESCE(ch.total_fee, 0) - COALESCE(p.total_paid, 0)) AS arrears
+FROM students s
+JOIN classes c ON s.class_id = c.class_id
+LEFT JOIN (
+    -- Get total unpaid challans fee per student
+    SELECT
+        ch.student_id,
+        SUM(ch.final_amount) AS total_fee
+    FROM challans ch
+    WHERE ch.status != 'paid'  
+    GROUP BY ch.student_id
+) ch ON s.student_id = ch.student_id
+LEFT JOIN (
+    -- Correctly sum payments for unpaid challans
+    SELECT
+        ch2.student_id,
+        SUM(p2.amount_paid) AS total_paid 
+    FROM payments p2
+    JOIN challans ch2 ON p2.challan_id = ch2.challan_id
+    WHERE ch2.status != 'paid'  
+    GROUP BY ch2.student_id
+) p ON s.student_id = p.student_id
+WHERE s.family_code = ?
+GROUP BY s.student_id, s.student_name, c.class_name, ch.total_fee, p.total_paid;
+
+
+
         ";
         
         $stmt = $conn->prepare($query);
