@@ -65,7 +65,7 @@ include 'sidebar.php';
                     ['label' => 'Total Monthly Fee Report', 'url' => 'monthly_fee_report'],
                 ],
                 [
-                    ['label' => 'Fee Settings', 'url' => 'fee_settings.php'],
+                    ['label' => 'Income & Loss Report', 'url' => 'income_loss'],
                     ['label' => 'Other Report', 'url' => 'other_report.php'],
                 ],
                 [
